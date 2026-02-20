@@ -4,17 +4,46 @@ from time import time
 
 test_powers = [14, 24, 20, 25]
 spell_names = ['fireball', 'flash', 'heal', 'meteor']
-mage_names = ['River', 'Alex', 'Casey', 'Nova', 'Rowan', 'Storm']
+mage_names = ['River', 'Alex', 'Casey', 'No va', 'Rowan', 'Storm']
 invalid_names = ['Jo', 'A', 'Alex123', 'Test@Name']
+
+
+def power_validator(min_power: int) -> callable:
+
+    def actual_decorator(func: callable):
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if (len(args) > 1):
+                if (args[2] >= min_power):
+                    return func(*args, **kwargs)
+                else:
+                    return "Insufficient power for this spell"
+            else:
+                if (args[0] >= min_power):
+                    return func(*args, **kwargs)
+                else:
+                    return "Insufficient power for this spell"
+
+        return wrapper
+
+    return actual_decorator
 
 
 class MageGuild():
     @staticmethod
     def validate_mage_name(name: str) -> bool:
-        pass
+        if (len(name) < 3):
+            return False
+        for c in name:
+            if (c.isspace() is False):
+                if (c.isalpha() is False):
+                    return False
+        return True
 
+    @power_validator(10)
     def cast_spell(self, spell_name: str, power: int) -> str:
-        pass
+        return f"Successfuly cast {spell_name} with {power} power"
 
 
 def spell_timer(func: callable) -> callable:
@@ -27,22 +56,6 @@ def spell_timer(func: callable) -> callable:
         print(f"Spell completed in {'{:.7f}'.format(end - start)} seconds")
         return result
     return wrapper
-
-
-def power_validator(min_power: int) -> callable:
-
-    def actual_decorator(func: callable):
-
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            if (args[0] >= min_power):
-                return func(*args, **kwargs)
-            else:
-                return "Insufficient power for this spell"
-
-        return wrapper
-
-    return actual_decorator
 
 
 def retry_spell(max_attempts: int) -> callable:
@@ -58,9 +71,10 @@ def retry_spell(max_attempts: int) -> callable:
                     mana += 1
                     return func(mana, **kwargs)
                 except Exception as e:
-                    print(f"{e} ,retrying... (attempt {attempt}/{max_attempts})")
+                    print(f"{e} ,retrying... \
+(attempt {attempt}/{max_attempts})")
                 attempt += 1
-            return f"Spell casting failed after {max_attempts}"
+            return f"Spell casting failed after {max_attempts} attempt"
 
         return wrapper
 
@@ -82,11 +96,13 @@ def cast_f_with_power(power: int) -> str:
     return "Fireball casted successfully"
 
 
-@retry_spell(5)
+@retry_spell(2)
 def cast_l_with_power(power: int):
     if power < 8:
         raise Exception("Spell failed")
     return "lightning casted successfully"
+
+# caca - Emilie 20/02/2026
 
 
 if (__name__ == "__main__"):
@@ -98,7 +114,16 @@ if (__name__ == "__main__"):
     print(f"casting fireball with 2 mana: {cast_f_with_power(2)}")
 
     print("Testing retry spell")
-    print(f"Trying casting lightning spell: {cast_l_with_power(1)}")
+    print(f"Trying casting lightning spell: {cast_l_with_power(1)}\n")
+
+    print("Testing MageGuild...")
+    Fairy_tail = MageGuild()
+    for name in mage_names:
+        print(Fairy_tail.validate_mage_name(name))
+    for invalid_name in invalid_names:
+        print(Fairy_tail.validate_mage_name(invalid_name))
+    print(Fairy_tail.cast_spell("Lightning", 15))
+    print(Fairy_tail.cast_spell("Lightning", 4))
 
 # https://www.geeksforgeeks.org/python/functools-module-in-python/
 # https://www.geeksforgeeks.org/python/decorators-in-python/
