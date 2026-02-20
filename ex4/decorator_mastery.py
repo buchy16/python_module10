@@ -46,7 +46,25 @@ def power_validator(min_power: int) -> callable:
 
 
 def retry_spell(max_attempts: int) -> callable:
-    pass
+
+    def actual_decorator(func: callable):
+
+        @wraps(func)
+        def wrapper(*args, **kwargs) -> str:
+            attempt = 1
+            mana = args[0]
+            while (attempt <= max_attempts):
+                try:
+                    mana += 1
+                    return func(mana, **kwargs)
+                except Exception as e:
+                    print(f"{e} ,retrying... (attempt {attempt}/{max_attempts})")
+                attempt += 1
+            return f"Spell casting failed after {max_attempts}"
+
+        return wrapper
+
+    return actual_decorator
 
 
 # =============================================================================
@@ -64,6 +82,13 @@ def cast_f_with_power(power: int) -> str:
     return "Fireball casted successfully"
 
 
+@retry_spell(5)
+def cast_l_with_power(power: int):
+    if power < 8:
+        raise Exception("Spell failed")
+    return "lightning casted successfully"
+
+
 if (__name__ == "__main__"):
     print("Testing spell timer...")
     print(f"Result {fireball()}\n")
@@ -71,6 +96,9 @@ if (__name__ == "__main__"):
     print("Testing power validator...")
     print(f"casting fireball with 8 mana: {cast_f_with_power(8)}")
     print(f"casting fireball with 2 mana: {cast_f_with_power(2)}")
+
+    print("Testing retry spell")
+    print(f"Trying casting lightning spell: {cast_l_with_power(1)}")
 
 # https://www.geeksforgeeks.org/python/functools-module-in-python/
 # https://www.geeksforgeeks.org/python/decorators-in-python/
